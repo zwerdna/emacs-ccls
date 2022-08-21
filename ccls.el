@@ -154,17 +154,23 @@ DIRECTION can be \"D\", \"L\", \"R\" or \"U\"."
 
 (advice-add 'lsp--suggest-project-root :before-until #'ccls--suggest-project-root)
 
-(lsp-register-client
- (make-lsp-client
-  :new-connection (lsp-stdio-connection (lambda () (cons ccls-executable ccls-args)))
-  :activation-fn (lsp-activate-on "c" "cpp" "objective-c" "cuda")
-  :server-id 'ccls
-  :multi-root nil
-  :notification-handlers
-  (lsp-ht ("$ccls/publishSkippedRanges" #'ccls--publish-skipped-ranges)
-          ("$ccls/publishSemanticHighlight" #'ccls--publish-semantic-highlight))
-  :initialization-options (lambda () ccls-initialization-options)
-  :library-folders-fn ccls-library-folders-fn))
+(defun ccls-register-custom-client (additional-args)
+	(lsp-register-client
+	 (apply
+		'make-lsp-client
+		:activation-fn (lsp-activate-on "c" "cpp" "objective-c" "cuda")
+		:multi-root nil
+		:notification-handlers
+		(lsp-ht ("$ccls/publishSkippedRanges" #'ccls--publish-skipped-ranges)
+						("$ccls/publishSemanticHighlight" #'ccls--publish-semantic-highlight))
+		:initialization-options (lambda () ccls-initialization-options)
+		:library-folders-fn ccls-library-folders-fn
+	 additional-args
+	 )))
+
+(ccls-register-custom-client
+ (list :server-id 'ccls
+			 :new-connection (lsp-stdio-connection (lambda () (cons ccls-executable ccls-args)))))
 
 (provide 'ccls)
 ;;; ccls.el ends here
